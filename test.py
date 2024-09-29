@@ -14,7 +14,7 @@ class SearchApp(QtWidgets.QWidget):
 
         # Définir la taille et le titre de la fenêtre
         self.setWindowTitle("WHERE IS MY VM")
-        self.setGeometry(100, 100, 500, 400)
+        self.setGeometry(100, 100, 500, 500)
         self.setStyleSheet("background-color: #D3D3D3;")
 
         # Appliquer le style pour arrondir les bords de la fenêtre
@@ -28,18 +28,24 @@ class SearchApp(QtWidgets.QWidget):
         container = QtWidgets.QFrame(self)
         container.setStyleSheet("""
             QFrame {
-                background-color: #e0e0e0;
+                background-color: #FCFAEE;
                 border-radius: 15px;
                 padding: 20px;
             }
         """)
         container_layout = QtWidgets.QVBoxLayout(container)
 
+        # Centrer la fenêtre sur l'écran
+        qr = self.frameGeometry()  # Récupérer la géométrie de la fenêtre
+        cp = QtWidgets.QDesktopWidget().availableGeometry().center()  # Obtenir le centre de l'écran
+        qr.moveCenter(cp)  # Déplacer le rectangle de géométrie au centre
+        self.move(qr.topLeft())  # Déplacer la fenêtre à cette position
+
         # Titre
         title_label = QtWidgets.QLabel("WHERE IS MY VM", self)
         title_label.setAlignment(QtCore.Qt.AlignCenter)
         title_label.setFont(QtGui.QFont("Arial", 14, QtGui.QFont.Bold))
-        title_label.setStyleSheet("color: black;")
+        title_label.setStyleSheet("color: black; font-size: 30px;")
         container_layout.addWidget(title_label)
 
         # Zone de recherche avec bouton
@@ -53,7 +59,7 @@ class SearchApp(QtWidgets.QWidget):
         search_layout.addWidget(self.search_entry)
 
         self.search_button = QtWidgets.QPushButton("Search", self)
-        self.search_button.setStyleSheet("border-radius: 10px; padding: 10px; background-color: #6B8E23; color: white;")
+        self.search_button.setStyleSheet("border-radius: 10px; padding: 10px; background-color: #507687; color: white;")
         self.search_button.clicked.connect(self.search)
         search_layout.addWidget(self.search_button)
 
@@ -76,6 +82,20 @@ class SearchApp(QtWidgets.QWidget):
         self.suggestions_list.hide()  # Cacher la liste au départ
         self.suggestions_list.itemClicked.connect(self.on_select)
         container_layout.addWidget(self.suggestions_list)
+
+        # Bouton quitter en dessous de la zone de résultat
+        self.quit_button = QtWidgets.QPushButton("QUITTER", self)
+        self.quit_button.setStyleSheet("""
+            QPushButton {
+                background-color: #B8001F;
+                font-weight: bold;
+                color: white;
+                border-radius: 10px;
+                padding: 10px;
+            }
+        """)
+        self.quit_button.clicked.connect(self.close)  # Connecter à la fermeture de la fenêtre
+        container_layout.addWidget(self.quit_button)
 
         # Ajouter le conteneur au layout principal
         main_layout.addWidget(container)
@@ -109,12 +129,16 @@ class SearchApp(QtWidgets.QWidget):
             return
 
         self.suggestions_list.clear()  # Vider la liste avant mise à jour
-        matches = set()
+        matches = []
 
+        # Chercher dans la totalité du nom (pas seulement au début)
         for values in self.data_dict.values():
             for value in values:
-                if value.upper().startswith(query):
-                    matches.add(value)
+                if query in value.upper():
+                    matches.append(value)
+
+        # Limiter les propositions à 3
+        matches = matches[:3]
 
         if matches:
             self.suggestions_list.show()  # Afficher la liste si des correspondances sont trouvées
